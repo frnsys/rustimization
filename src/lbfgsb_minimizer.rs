@@ -3,6 +3,7 @@ use std::ffi::CStr;
 use lbfgsb::step;
 use string::stringfy;
 
+#[derive(Debug)]
 pub enum OptResult {
     Convergence,
     InputParameterError,
