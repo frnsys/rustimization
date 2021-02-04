@@ -2,6 +2,15 @@ use libc::{c_char, c_double, c_int};
 use std::ffi::CStr;
 use lbfgsb::step;
 use string::stringfy;
+
+pub enum OptResult {
+    Convergence,
+    InputParameterError,
+    GradientStopped,
+    AbnormalTermination,
+    MaxIterations,
+}
+
 pub struct Lbfgsb<'a> {
     n: c_int,
     m: c_int,
@@ -54,7 +63,7 @@ impl<'a> Lbfgsb<'a> {
         }
     }
     // this function will start the optimization algorithm
-    pub fn minimize(&mut self) {
+    pub fn minimize(&mut self) -> OptResult {
         let mut fval = 0.0f64;
         let mut gval = vec![0.0f64;self.x.len()];
         let func = self.f;
@@ -90,22 +99,23 @@ impl<'a> Lbfgsb<'a> {
             }
             if &tsk[0..5] == "NEW_X" && self.max_iter == 0 &&
                self.dsave[11] <= 1.0e-10 * (1.0e0 + fval.abs()) {
-                println!("THE PROJECTED GRADIENT IS SUFFICIENTLY SMALL");
-                break;
+                // println!("THE PROJECTED GRADIENT IS SUFFICIENTLY SMALL");
+                break OptResult::GradientStopped
             }
             if self.max_iter > 0 && self.isave[29] >= self.max_iter as i32 {
-                break;
+                break OptResult::MaxIterations
             }
             if &tsk[0..4] == "CONV" {
-                println!("convergence!");
-                break;
+                // println!("convergence!");
+                break OptResult::Convergence
             }
             if &tsk[0..5] == "ERROR" {
-                println!("error in the input parameters");
+                // println!("error in the input parameters");
+                break OptResult::InputParameterError
             }
             if &tsk[0..8] == "ABNORMAL" {
-                println!("ERROR: ABNORMAL TERMINATION");
-                break;
+                // println!("ERROR: ABNORMAL TERMINATION");
+                break OptResult::AbnormalTermination
             }
         }
     }
